@@ -23,6 +23,7 @@ $password = '';
 $sort = '';
 $params = '';
 
+// 並び替え
 if(!empty($_GET['id_sort']))
 {
 	$sort = "ORDER BY id ASC";
@@ -62,7 +63,7 @@ try {
 	
 	$db = new PDO($dsn, $user, $password);
 	
-	$sql = "SELECT COUNT(*) AS total FROM posts {$sort};";
+	$sql = "SELECT COUNT(*) AS total FROM posts {$db->query($sort)};";
 
 	$stmt = $db->prepare($sql);
 	$stmt->execute();
@@ -76,6 +77,25 @@ try {
 } catch(PDOException $e) {
 	die('エラーメッセージ：'.$e->getMessage());
 }
+
+// データ取得
+try {
+
+	$db = new PDO($dsn, $user, $password);
+
+	$sql = "SELECT * FROM posts {$db->query($sort)} LIMIT :offset, :limit;";
+
+	$stmt = $db->prepare($sql);
+	$stmt->bindValue(':offset', $offset, PDO::PARAM_INT);
+	$stmt->bindValue(':limit', $display_num, PDO::PARAM_INT);
+	$stmt->execute();
+
+	$db = NULL;
+
+} catch(PDOException $e) {
+	die('エラーメッセージ：'.$e->getMessage());
+}
+
 
 // 最大ページ数
 $max_page = ceil($total/$display_num);
@@ -104,24 +124,6 @@ echo '現グループの先頭ページ： '.$current_group_first.'<br>';
 echo '前グループの後尾ページ： '.$previous_group_last.'<br>';
 echo '次グループの先頭ページ： '.$next_group_first.'<br>';
 echo '現在のページの最終ページ： '.$endpage.'<br>';
-
-// データ取得
-try {
-
-	$db = new PDO($dsn, $user, $password);
-
-	$sql = "SELECT * FROM posts {$sort} LIMIT :offset, :limit;";
-
-	$stmt = $db->prepare($sql);
-	$stmt->bindValue(':offset', $offset, PDO::PARAM_INT);
-	$stmt->bindValue(':limit', $display_num, PDO::PARAM_INT);
-	$stmt->execute();
-
-	$db = NULL;
-
-} catch(PDOException $e) {
-	die('エラーメッセージ：'.$e->getMessage());
-}
 
 ?>
 
